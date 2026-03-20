@@ -79,12 +79,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             raise ValueError("Battery must be 1–100")
 
        # 加载底图
+# 加载底图
 try:
     base = Image.open(BASE_IMAGE_PATH).convert("RGBA")
 except Exception as e:
     raise FileNotFoundError(f"Cannot open base image: {BASE_IMAGE_PATH}") from e
 
-draw = ImageDraw.Draw(base)   # ← 这里是正确写法
+draw = ImageDraw.Draw(base)  # ← 正确写法，只有这一行
 
 # 尝试加载字体，失败用默认
 try:
