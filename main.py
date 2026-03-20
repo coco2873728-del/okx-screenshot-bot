@@ -78,29 +78,36 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         if not 1 <= battery_pct <= 100:
             raise ValueError("Battery must be 1–100")
 
-        # 加载底图
-        base = Image.open(BASE_IMAGE_PATH).convert("RGBA")
-        draw = ImageDraw.Draw(base)
+       # 加载底图
+try:
+    base = Image.open(BASE_IMAGE_PATH).convert("RGBA")
+except Exception as e:
+    raise FileNotFoundError(f"Cannot open base image: {BASE_IMAGE_PATH}") from e
 
-        # 尝试加载字体，失败用默认
-        try:
-            font_big   = ImageFont.truetype(FONT_PATH, 52)
-            font_med   = ImageFont.truetype(FONT_PATH, 38)
-            font_small = ImageFont.truetype(FONT_PATH, 32)
-            font_addr  = ImageFont.truetype(FONT_PATH, 28)
-        except:
-            font_big = font_med = font_small = font_addr = ImageFont.load_default()
-            logger.warning("Custom font not found, using default")
+draw = ImageDraw.Draw(base)   # ← 这里是正确写法
 
-        # 写入文字（居中示例，可改 anchor="la" 左上对齐）
-        draw.text(POS_TIME,     time_str,     font=font_small, fill=COLOR_TEXT)
-        draw.text(POS_AMOUNT,   amount_display, font=font_big,   fill=COLOR_TEXT, anchor="mm")
-        draw.text(POS_USD,      usd_display,  font=font_med,   fill=COLOR_TEXT, anchor="mm")
-        draw.text(POS_ADDRESS,  address,      font=font_addr,  fill=COLOR_TEXT, anchor="mm")
+# 尝试加载字体，失败用默认
+try:
+    font_big   = ImageFont.truetype(FONT_PATH, 52)
+    font_med   = ImageFont.truetype(FONT_PATH, 38)
+    font_small = ImageFont.truetype(FONT_PATH, 32)
+    font_addr  = ImageFont.truetype(FONT_PATH, 28)
+except Exception:
+    font_big = font_med = font_small = font_addr = ImageFont.load_default()
+    logger.warning("Custom font not found, using default")
 
-        # 贴电量图标
-        bat = load_battery(battery_pct)
-        base.paste(bat, POS_BATTERY, bat)
+# 写入文字
+draw.text(POS_TIME, time_str, font=font_small, fill=COLOR_TEXT)
+
+draw.text(POS_AMOUNT, amount_display, font=font_big, fill=COLOR_TEXT, anchor="mm")
+
+draw.text(POS_USD, usd_display, font=font_med, fill=COLOR_TEXT, anchor="mm")
+
+draw.text(POS_ADDRESS, address, font=font_addr, fill=COLOR_TEXT, anchor="mm")
+
+# 贴电量图标
+bat = load_battery(battery_pct)
+base.paste(bat, POS_BATTERY, bat)
 
         # 保存临时文件
         filename = f"okx_{update.effective_user.id}_{int(datetime.now().timestamp())}.png"
